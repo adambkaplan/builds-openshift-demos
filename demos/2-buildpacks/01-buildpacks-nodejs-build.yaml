@@ -1,0 +1,20 @@
+apiVersion: shipwright.io/v1beta1
+kind: Build
+metadata:
+  name: buildpacks-nodejs
+  namespace: demo-buildpacks
+spec:
+  source:
+    type: Git
+    git:
+      url: https://github.com/shipwright-io/sample-nodejs
+  strategy:
+    name: buildpacks
+    kind: ClusterBuildStrategy
+  paramValues:
+  - name: cnb-builder-image
+    value: docker.io/paketocommunity/builder-ubi-base:latest
+  - name: run-image
+    value: docker.io/paketocommunity/run-ubi-base:latest
+  output:
+    image: image-registry.openshift-image-registry.svc:5000/demo-buildpacks/nodejs-ex:latest
