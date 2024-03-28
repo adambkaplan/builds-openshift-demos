@@ -15,4 +15,4 @@ spec:
   - name: builder-image
     value: image-registry.openshift-image-registry.svc:5000/openshift/nodejs:16-ubi9
   output:
-    image: image-registry.openshift-image-registry.svc:5000/build-strategies/s2i-nodejs:16-ubi9
+    image: image-registry.openshift-image-registry.svc:5000/build-strategies/nodejs-ex:s2i

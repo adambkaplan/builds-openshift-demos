@@ -12,23 +12,24 @@ p "First, we define a \`Build\` for our application"
 cat 01-s2i-nodejs-build.yaml
 pe "oc apply -f 01-s2i-nodejs-build.yaml"
 p "Let's also create an imagestream for our output image"
-pe "oc create imagestream s2i-nodejs-build"
+pe "oc create imagestream nodejs-ex"
 wait
 clear
 
 p "We use the shp command line to start a build"
-pe "shp build run s2i-nodejs-build --follow"
+pe "shp build run s2i-nodejs --follow"
 wait
 clear
 
-# p "We don't have to choose - with a Dockerfile, we can build with buildah too."
-# cat 02-sample-buildah-nodejs-build.yaml
+p "We don't have to choose - with a Dockerfile, we can build with buildah too."
+cat 02-buildah-nodejs-build.yaml
 
-# pe "oc apply -f 02-sample-buildah-nodejs-build.yaml"
-# wait
-# clear
-# pe "shp build run sample-buildah-nodejs --follow"
+pe "oc apply -f 02-buildah-nodejs-build.yaml"
+wait
+clear
+pe "shp build run buildah-nodejs --follow"
 
+p "You can use other strategies to build applications, or even create your own!"
 p "Check out shipwright.io for additional info!"
 wait
 clear
