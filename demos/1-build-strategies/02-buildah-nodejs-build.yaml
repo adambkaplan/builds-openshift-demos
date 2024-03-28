@@ -1,0 +1,16 @@
+apiVersion: shipwright.io/v1beta1
+kind: Build
+metadata:
+  name: buildah-nodejs
+  namespace: build-strategies
+spec:
+  source:
+    type: Git
+    git:
+      url: https://github.com/shipwright-io/sample-nodejs.git
+    contextDir: docker-build
+  strategy:
+    name: buildah
+    kind: ClusterBuildStrategy
+  output:
+    image: image-registry.openshift-image-registry.svc:5000/build-strategies/nodejs-ex:buildah
