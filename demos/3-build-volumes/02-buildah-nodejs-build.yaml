@@ -1,0 +1,20 @@
+apiVersion: shipwright.io/v1beta1
+kind: Build
+metadata:
+  name: buildah-nodejs
+  namespace: build-volumes
+spec:
+  source:
+    type: Git
+    git:
+      url: https://github.com/shipwright-io/sample-nodejs.git
+    contextDir: docker-build
+  strategy:
+    name: buildah-cache
+    kind: BuildStrategy
+  output:
+    image: image-registry.openshift-image-registry.svc:5000/build-volumes/nodejs-ex:buildah
+  volumes:
+    - name: build-cache
+      persistentVolumeClaim:
+        claimName: build-cache
