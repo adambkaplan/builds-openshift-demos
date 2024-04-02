@@ -3,7 +3,7 @@
 # shellcheck source-path=lib
 . ../../lib/demo-magic.sh
 
-oc new-project build-volumes
+oc new-project demo-builds
 oc create imagestream nodejs-ex
 
 p "You can add persistent volumes for builds, to hold things like dependency caches"

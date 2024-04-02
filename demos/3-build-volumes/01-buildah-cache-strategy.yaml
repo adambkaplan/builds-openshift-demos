@@ -3,7 +3,7 @@ apiVersion: shipwright.io/v1beta1
 kind: BuildStrategy
 metadata:
   name: buildah-cache
-  namespace: build-volumes
+  namespace: demo-builds
 spec:
   steps:
     - name: build-and-push

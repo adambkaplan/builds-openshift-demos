@@ -2,7 +2,7 @@ apiVersion: shipwright.io/v1beta1
 kind: Build
 metadata:
   name: buildah-nodejs
-  namespace: build-strategies
+  namespace: demo-builds
 spec:
   source:
     type: Git
@@ -13,4 +13,4 @@ spec:
     name: buildah
     kind: ClusterBuildStrategy
   output:
-    image: image-registry.openshift-image-registry.svc:5000/build-strategies/nodejs-ex:buildah
+    image: image-registry.openshift-image-registry.svc:5000/demo-builds/nodejs-ex:buildah

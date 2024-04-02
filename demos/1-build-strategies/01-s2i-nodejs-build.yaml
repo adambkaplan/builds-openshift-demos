@@ -2,7 +2,7 @@ apiVersion: shipwright.io/v1beta1
 kind: Build
 metadata:
   name: s2i-nodejs
-  namespace: build-strategies
+  namespace: demo-builds
 spec:
   source:
     type: Git
@@ -15,4 +15,4 @@ spec:
   - name: builder-image
     value: image-registry.openshift-image-registry.svc:5000/openshift/nodejs:16-ubi9
   output:
-    image: image-registry.openshift-image-registry.svc:5000/build-strategies/nodejs-ex:s2i
+    image: image-registry.openshift-image-registry.svc:5000/demo-builds/nodejs-ex:s2i

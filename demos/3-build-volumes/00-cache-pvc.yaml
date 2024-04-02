@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: build-cache
-  namespace: build-volumes
+  namespace: demo-builds
 spec:
   accessModes:
     - ReadWriteOnce
