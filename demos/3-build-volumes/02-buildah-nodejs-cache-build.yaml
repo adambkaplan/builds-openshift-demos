@@ -1,7 +1,7 @@
 apiVersion: shipwright.io/v1beta1
 kind: Build
 metadata:
-  name: buildah-nodejs
+  name: buildah-nodejs-cache
   namespace: demo-builds
 spec:
   source:
