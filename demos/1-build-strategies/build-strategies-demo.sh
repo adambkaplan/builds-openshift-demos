@@ -3,7 +3,7 @@
 # shellcheck source-path=lib
 . ../../lib/demo-magic.sh
 
-oc new-project build-strategies
+oc new-project demo-builds
 
 clear
 
@@ -33,5 +33,3 @@ p "You can use other strategies to build applications, or even create your own!"
 p "Check out shipwright.io for additional info!"
 wait
 clear
-
-oc delete project build-strategies

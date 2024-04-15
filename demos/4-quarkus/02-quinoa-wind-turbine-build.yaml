@@ -1,0 +1,19 @@
+apiVersion: shipwright.io/v1beta1
+kind: Build
+metadata:
+  name: quinoa-wind-turbine
+  namespace: demo-builds
+spec:
+  source:
+    type: Git
+    git:
+      url: https://github.com/redhat-developer-demos/quinoa-wind-turbine.git
+  strategy:
+    name: quarkus-buildah-cache
+    kind: BuildStrategy
+  output:
+    image: image-registry.openshift-image-registry.svc:5000/demo-builds/quinoa-wind-turbine:latest
+  volumes:
+    - name: build-cache
+      persistentVolumeClaim:
+        claimName: quarkus-cache
