@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi:9.4
+FROM registry.access.redhat.com/ubi9/ubi:9.2
 RUN rm -rf /etc/rhsm-host
 RUN dnf -y --enablerepo=codeready-builder-for-rhel-9-x86_64-rpms install \ 
     nss_wrapper \
