@@ -1,7 +1,7 @@
-FROM registry.access.redhat.com/ubi9/ubi:9.3
+FROM registry.access.redhat.com/ubi8/ubi:latest
 RUN rm -rf /etc/rhsm-host
-RUN dnf -y --enablerepo=codeready-builder-for-rhel-9-x86_64-rpms install \ 
+RUN yum -y --enablerepo=codeready-builder-for-rhel-9-x86_64-rpms install \ 
     nss_wrapper \
     uid_wrapper && \
-    dnf clean all -y
+    yum clean all -y
 RUN ln -s /run/secrets/rhsm /etc/rhsm-host
