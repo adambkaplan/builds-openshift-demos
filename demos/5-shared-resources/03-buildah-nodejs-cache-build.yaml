@@ -1,0 +1,33 @@
+apiVersion: shipwright.io/v1beta1
+kind: Build
+metadata:
+  name: buildah-nodejs-cache
+  namespace: build-nodejs
+spec:
+  source:
+    type: Git
+    git:
+      url: https://github.com/shipwright-io/sample-nodejs.git
+    contextDir: docker-build
+  strategy:
+    name: buildah-cache
+    kind: BuildStrategy
+  output:
+    image: image-registry.openshift-image-registry.svc:5000/demo-builds/nodejs-ex:buildah
+  paramValues:
+    - name: build-args
+      values:
+        - value: -v
+        - value: "/opt/app/cache:/opt/app/cache"
+        - value: --env
+        - value: NPM_GLOBALCONFIG=/opt/app/config/npmrc
+  volumes:
+    - name: build-cache
+      persistentVolumeClaim:
+        claimName: build-cache
+    - name: shared-config
+      csi:
+        readOnly: true
+        driver: csi.sharedresource.openshift.io
+        volumeAttributes:
+          sharedConfigMap: build-settings
