@@ -39,7 +39,8 @@ More "official" information can be found in the following locations:
 ## Table of Contents
 
 0. Installing: [demos/0-install](demos/0-install/install-demo.sh). If your cluster does not have
-   Builds for OpenShift installed, run this demo script first.
+   Builds for OpenShift installed, run this demo script first. _Note: this demo may not work on
+   managed OpenShift clusters like ROSA. Follow official documented install instructions instead._
 1. Build Strategies: [demos/1-build-strategies](demos/1-build-strategies/build-strategies-demo.sh).
    This demos how to build with `source-to-image` and `buildah` build strategies.
 2. Cloud Native Buildpacks - coming soon!
