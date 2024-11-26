@@ -7,7 +7,6 @@ spec:
     type: Git
     git:
       url: https://github.com/adambkaplan/builds-openshift-demos
-      revision: entitled-builds
     contextDir: demos/6-entitled-builds/build
   strategy:
     name: buildah
