@@ -50,3 +50,6 @@ More "official" information can be found in the following locations:
 4. Quarkus: [demos/4-quarkus](demos/4-quarkus/quarkus-demo.sh). An example of using
    [Quarkus](https://quarkus.io) to build a Java + NodeJS application with Shipwright, with a
    persistent cache to improve performance.
+5. Sharing Resources in Pods - coming soon!
+6. Building with RHEL Subscription Content: [demos/6-entitled-builds](demos/6-entitled-builds/demo.sh).
+   Note that this demo requires a cluster with a valid Red Hat subscription.
