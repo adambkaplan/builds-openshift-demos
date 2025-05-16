@@ -4,12 +4,13 @@
 . ../../lib/demo-magic.sh
 
 oc new-project buildah-entitlement
-oc create imagestream buildah-rhel
+oc create imagestream buildah-bootc
+oc import-image rhel-bootc --from="registry.redhat.io/rhel10/rhel-bootc:10.0-1747275807" --confirm
 clear
 
 p "Suppose our build needs to install RHEL packages:"
 pe "cat build/Containerfile"
-p "With Builds 1.2, we can use the cluster's subscription to install RHEL content!"
+p "With Builds 1.2+, we can use the cluster's subscription to install RHEL content!"
 clear
 
 p "To access the subscription, a cluster admin first needs to share it using a SharedSecret object."
@@ -39,11 +40,12 @@ wait
 clear
 
 p "Finally, we configure a build to mount the SharedSecret into the build, and run it!"
+p "Let's use this to build a bootc image with the real-time kernel installed."
 cat 04-entitled-build.yaml
 pe "oc apply -f 04-entitled-build.yaml"
-pe "shp build run buildah-rhel -F"
+pe "shp build run buildah-bootc -F"
 wait
-p "Our build ran and successfully installed the RHEL packages!"
+p "Our build ran and successfully installed the RHEL real-time kernel!"
 wait
 clear
 
