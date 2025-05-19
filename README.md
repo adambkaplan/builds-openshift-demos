@@ -42,7 +42,9 @@ More "official" information can be found in the following locations:
    Builds for OpenShift installed, run this demo script first.
 1. Build Strategies: [demos/1-build-strategies](demos/1-build-strategies/build-strategies-demo.sh).
    This demos how to build with `source-to-image` and `buildah` build strategies.
-2. Cloud Native Buildpacks - coming soon!
+2. Cloud Native Buildpacks - [demos/2-cnb](demos/2-cnb/demo.sh). This is a preview of how to run a
+   build with Cloud Native Buildpacks. Note that for this demo to work, you need to provide a pull
+   secret for `docker.io` named `dockerhub` and add it to your cluster.
 3. Build Volumes: [demos/3-build-volumes](demos/3-build-volumes/build-volumes-demo.sh). This demos
    how to create a custom [BuildStrategy](https://shipwright.io/docs/build/buildstrategies/#overview)
    and add a [persistent volume](https://shipwright.io/docs/build/build/#defining-volumes) for

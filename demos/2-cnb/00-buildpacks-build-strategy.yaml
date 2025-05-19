@@ -1,0 +1,289 @@
+apiVersion: shipwright.io/v1beta1
+kind: ClusterBuildStrategy
+metadata:
+  name: buildpacks
+spec:
+  volumes:
+    - name: certificate-registry
+      emptyDir: {}
+      overridable: true
+    - name: creds-ws
+      emptyDir: {}
+      overridable: true
+    - name: kaniko-dir
+      emptyDir: {}
+    - name: platform-env
+      emptyDir: {}
+    - name: layers-dir
+      emptyDir: {}
+    - name: empty-dir
+      emptyDir: {}
+    - name: cache-dir
+      emptyDir: {}
+      overridable: true
+  parameters:
+    - name: certificate-path
+      description: Path to self signed certificate(s)
+      default: "/selfsigned-certificates"
+    - name: CNB_PLATFORM_API
+      description: Platform API Version supported
+      default: ""
+    - name: CNB_BUILDER_IMAGE
+      description: Builder image containing the buildpacks
+      default: ""
+    - name: CNB_LIFECYCLE_IMAGE
+      description: The image to use when executing Lifecycle phases.
+      default: ""
+    - name: CNB_RUN_IMAGE
+      description: Reference to a run image to use.
+      default: ""
+    - name: CNB_BUILD_IMAGE
+      description: Reference to the current build image in an OCI registry (if used <kaniko-dir> must be provided)
+      default: ""
+    - name: CNB_LOG_LEVEL
+      description: Logging level
+      default: "info"
+    - name: APP_IMAGE
+      description: The name of where to store the app image.
+    - name: CACHE_IMAGE
+      description: The name of the persistent app cache image (if no cache workspace is provided).
+      default: ""
+    - name: CACHE_DIR_NAME
+      description: Directory to cache files
+      default: cache
+    - name: PROCESS_TYPE
+      description: The default process type to set on the image.
+      default: ""
+    - name: SOURCE_SUBPATH
+      description: A subpath within the `source` input where the source to build is located.
+      default: ""
+    - name: ENV_VARS
+      type: array
+      description: Environment variables to set during _build-time_.
+      defaults: []
+    - name: PLATFORM_DIR
+      description: The name of the platform directory.
+      default: empty-dir
+    - name: CNB_USER_ID
+      description: The user ID of the builder image user.
+      default: "1001"
+    - name: CNB_GROUP_ID
+      description: The group ID of the builder image user.
+      default: "1000"
+    - name: CNB_INSECURE_REGISTRIES
+      description: List of registries separated by a comma having a self-signed certificate where TLS verification will be skipped.
+    - name: USER_HOME
+      description: Absolute path to the user's home directory.
+      default: /tekton/home
+    - # TODO: Should be defined using ENV_VARS. To be reviewed
+      name: BP_NATIVE_IMAGE
+      description: Whether to build a native image from the application. Defaults to false.
+      default: "false"
+    - # TODO: Should be defined using ENV_VARS. To be reviewed
+      name: BP_MAVEN_BUILT_ARTIFACT
+      description: Configure the built application artifact explicitly. Supersedes $BP_MAVEN_BUILT_MODULE Defaults to target/*.[ejw]ar. Can match a single file, multiple files or a directory. Can be one or more space separated patterns.
+      default: "target/*.[ejw]ar"
+    - # TODO: Should be defined using ENV_VARS. To be reviewed
+      name: BP_MAVEN_BUILD_ARGUMENTS
+      description: Configure the arguments to pass to Maven. Defaults to -Dmaven.test.skip=true --no-transfer-progress package. --batch-mode will be prepended to the argument list in environments without a TTY.
+      default: "-Dmaven.test.skip=true --no-transfer-progress package"
+  steps:
+    - name: prepare
+      image: registry.access.redhat.com/ubi9/ubi-minimal:9.6
+      command: ["/bin/bash"]
+      args:
+        - -c
+        - |
+          set -e
+
+          # TODO: To be reviewed
+          echo "> Creating the cache directory if it is not empty"
+          if [ ! -d "$DIRECTORY" ]; then
+            echo "> Creating cache: /layers/$(params.CACHE_DIR_NAME)"
+            mkdir -p /layers/$(params.CACHE_DIR_NAME)
+            chown -R "$(params.CNB_USER_ID):$(params.CNB_GROUP_ID)" /layers/$(params.CACHE_DIR_NAME)
+          fi
+
+          # TODO: To be reviewed as shipwright don't support like Tekton workspaces
+          #if [[ "$(workspaces.cache.bound)" == "true" ]]; then
+          #  echo "> Setting permissions on '$(workspaces.cache.path)'..."
+          #  chown -R "$(params.CNB_USER_ID):$(params.CNB_GROUP_ID)" "$(workspaces.cache.path)"
+          #fi
+
+          echo "Creating .docker folder"
+          mkdir -p "/tekton/home/.docker"
+
+          for path in "/tekton/home" "/tekton/home/.docker" "/layers" "$(workspaces.source.path)"; do
+            echo "> Setting permissions on '$path'..."
+            chown -R "$(params.CNB_USER_ID):$(params.CNB_GROUP_ID)" "$path"
+          done
+
+          echo "> Parsing additional configuration..."
+          parsing_flag=""
+          envs=()
+          for arg in "$@"; do
+              if [[ "$arg" == "--env-vars" ]]; then
+                  echo "-> Parsing env variables..."
+                  parsing_flag="env-vars"
+              elif [[ "$parsing_flag" == "env-vars" ]]; then
+                  envs+=("$arg")
+              fi
+          done
+
+          echo "> Processing any environment variables..."
+          ENV_DIR="/platform/env"
+
+          echo "--> Creating 'env' directory: $ENV_DIR"
+          mkdir -p "$ENV_DIR"
+
+          for env in "${envs[@]}"; do
+              IFS='=' read -r key value string <<< "$env"
+              if [[ "$key" != "" && "$value" != "" ]]; then
+                  path="${ENV_DIR}/${key}"
+                  echo "--> Writing ${path}..."
+                  echo -n "$value" > "$path"
+              fi
+          done
+        # That's the separator between the shell script and its args
+        - --
+        - --env-vars
+        - $(params.ENV_VARS[*])
+      volumeMounts:
+        - name: layers-dir
+          mountPath: /layers
+        - name: empty-dir #name: --> DON'T WORK : $(params.PLATFORM_DIR)
+          mountPath: /platform
+        - name: cache-dir #name: --> DON'T WORK : $(params.CACHE_DIR_NAME)
+          mountPath: /tmp/cache
+    - name: analyze
+      image: $(params.CNB_BUILDER_IMAGE)
+      command: ["/cnb/lifecycle/analyzer"]
+      args:
+        - "-log-level=$(params.CNB_LOG_LEVEL)"
+        - "-layers=/layers"
+        - "-run-image=$(params.CNB_RUN_IMAGE)"
+        - "-cache-image=$(params.CACHE_IMAGE)"
+        - "-uid=$(params.CNB_USER_ID)"
+        - "-gid=$(params.CNB_GROUP_ID)"
+        - "-insecure-registry=$(params.CNB_INSECURE_REGISTRIES)"
+        - "$(params.APP_IMAGE)"
+      env:
+        - name: CNB_PLATFORM_API
+          value: $(params.CNB_PLATFORM_API)
+      volumeMounts:
+        - name: layers-dir
+          mountPath: /layers
+
+    - name: detect
+      image: $(params.CNB_BUILDER_IMAGE)
+      imagePullPolicy: Always
+      command: ["/cnb/lifecycle/detector"]
+      args:
+        - "-app=$(workspaces.source.path)/$(params.SOURCE_SUBPATH)"
+        - "-group=/layers/group.toml"
+        - "-plan=/layers/plan.toml"
+        - "-platform=$(params.PLATFORM_DIR)"
+      env:
+        - name: CNB_PLATFORM_API
+          value: $(params.CNB_PLATFORM_API)
+      volumeMounts:
+        - name: layers-dir
+          mountPath: /layers
+        - name: empty-dir # Hard coded the name as substitution do not work: $(params.PLATFORM_DIR)
+          mountPath: /platform
+        - name: empty-dir
+          mountPath: /tekton/home
+
+    - name: restore
+      image: $(params.CNB_BUILDER_IMAGE)
+      imagePullPolicy: Always
+      command: ["/cnb/lifecycle/restorer"]
+      args:
+        - "-log-level=$(params.CNB_LOG_LEVEL)"
+        - "-build-image=$(params.CNB_BUILD_IMAGE)"
+        - "-group=/layers/group.toml"
+        - "-layers=/layers"
+        - "-cache-dir=/layers/$(params.CACHE_DIR_NAME)"
+        - "-cache-image=$(params.CACHE_IMAGE)"
+        - "-uid=$(params.CNB_USER_ID)"
+        - "-gid=$(params.CNB_GROUP_ID)"
+        - "-insecure-registry=$(params.CNB_INSECURE_REGISTRIES)"
+      env:
+        - name: CNB_PLATFORM_API
+          value: $(params.CNB_PLATFORM_API)
+      volumeMounts:
+        - name: layers-dir
+          mountPath: /layers
+        - name: kaniko-dir
+          mountPath: /kaniko
+        - name: cache-dir
+          mountPath: /tmp/cache #name: --> DON'T WORK : $(params.CACHE_DIR_NAME)
+
+    - name: extender
+      image: $(params.CNB_BUILDER_IMAGE)
+      imagePullPolicy: Always
+      command: ["/cnb/lifecycle/extender"]
+      env:
+        - name: CNB_PLATFORM_API
+          value: $(params.CNB_PLATFORM_API)
+      args:
+        - "-log-level=$(params.CNB_LOG_LEVEL)"
+        - "-app=$(workspaces.source.path)/$(params.SOURCE_SUBPATH)"
+        - "-generated=/layers/generated"
+        - "-uid=$(params.CNB_USER_ID)"
+        - "-gid=$(params.CNB_GROUP_ID)"
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        capabilities:
+          add:
+            - "SYS_ADMIN"
+            - "SETFCAP"
+      volumeMounts:
+        - name: layers-dir
+          mountPath: /layers
+        - name: kaniko-dir
+          mountPath: /kaniko
+        - name: empty-dir
+          mountPath: /tekton/home
+
+    - name: export
+      image: $(params.CNB_BUILDER_IMAGE)
+      imagePullPolicy: Always
+      command: ["/cnb/lifecycle/exporter"]
+      args:
+        - "-log-level=$(params.CNB_LOG_LEVEL)"
+        - "-app=$(workspaces.source.path)/$(params.SOURCE_SUBPATH)"
+        - "-layers=/layers"
+        - "-group=/layers/group.toml"
+        - "-cache-dir=/layers/$(params.CACHE_DIR_NAME)"
+        - "-cache-image=$(params.CACHE_IMAGE)"
+        - "-report=/layers/report.toml"
+        - "-process-type=$(params.PROCESS_TYPE)"
+        - "-uid=$(params.CNB_USER_ID)"
+        - "-gid=$(params.CNB_GROUP_ID)"
+        - "-insecure-registry=$(params.CNB_INSECURE_REGISTRIES)"
+        - "$(params.APP_IMAGE)"
+      env:
+        - name: CNB_PLATFORM_API
+          value: $(params.CNB_PLATFORM_API)
+      volumeMounts:
+        - name: layers-dir
+          mountPath: /layers
+        - name: cache-dir
+          mountPath: /tmp/cache #name: --> DON'T WORK : $(params.CACHE_DIR_NAME)
+        - mountPath: /selfsigned-certificates
+          name: certificate-registry
+          readOnly: true
+
+    - name: results
+      image: registry.access.redhat.com/ubi9/ubi-minimal:9.6
+      command: ["/bin/bash"]
+      args:
+        - -c
+        - |
+          set -e
+          cat /layers/report.toml | grep "digest" | cut -d'"' -f2 | cut -d'"' -f2 | tr -d '\n' > $(results.shp-image-digest.path)
+      volumeMounts:
+        - name: layers-dir
+          mountPath: /layers
