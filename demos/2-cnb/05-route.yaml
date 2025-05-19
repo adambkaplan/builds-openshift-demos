@@ -1,0 +1,28 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: ""
+    app.openshift.io/vcs-uri: https://github.com/quarkusio/quarkus-quickstarts
+    openshift.io/host.generated: "true"
+  labels:
+    app: quarkus-hello
+    app.kubernetes.io/component: quarkus-hello
+    app.kubernetes.io/instance: quarkus-hello
+    app.kubernetes.io/name: quarkus-hello
+    app.kubernetes.io/part-of: quarkus-hello-app
+    app.openshift.io/runtime: java
+    app.openshift.io/runtime-version: openjdk-17-ubi8
+  name: quarkus-hello
+  namespace: ubi-buildpacks
+spec:
+  port:
+    targetPort: 8080-tcp
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: quarkus-hello
+    weight: 100
+  wildcardPolicy: None

@@ -1,0 +1,52 @@
+apiVersion: shipwright.io/v1beta1
+kind: Build
+metadata:
+  name: quarkus-hello
+  labels:
+    app: quarkus-hello
+    app.kubernetes.io/component: quarkus-hello
+    app.kubernetes.io/instance: quarkus-hello
+    app.kubernetes.io/name: quarkus-hello
+    app.kubernetes.io/part-of: quarkus-hello-app
+    app.openshift.io/runtime: java
+    app.openshift.io/runtime-version: openjdk-17-ubi8
+spec:
+  source:
+    type: Git
+    git:
+      url: https://github.com/quarkusio/quarkus-quickstarts
+      revision: "3.22"
+    contextDir: getting-started
+  paramValues:
+    - name: SOURCE_SUBPATH
+      value: getting-started
+    - name: CNB_PLATFORM_API
+      value: "0.13"
+    - name: CNB_BUILDER_IMAGE
+      value: docker.io/paketobuildpacks/builder-ubi8-base:0.1.1
+    - name: CNB_LIFECYCLE_IMAGE
+      value: docker.io/buildpacksio/lifecycle:0.20.9
+    - name: CNB_INSECURE_REGISTRIES
+      value: image-registry.openshift-image-registry.svc:5000
+    - name: CNB_USER_ID
+      value: "1002"
+    - name: CNB_GROUP_ID
+      value: "1000"
+    - name: CNB_RUN_IMAGE
+      value: docker.io/paketobuildpacks/run-ubi8-base:0.0.114
+    - name: CNB_BUILD_IMAGE
+      value: docker.io/paketobuildpacks/build-ubi8-base:0.0.114
+    - name: APP_IMAGE
+      value: image-registry.openshift-image-registry.svc:5000/ubi-buildpacks/quarkus-hello
+    - name: PROCESS_TYPE
+      value: ""
+    - name: ENV_VARS
+      values:
+        - value: BP_JVM_VERSION=21
+  strategy:
+    name: buildpacks
+    kind: ClusterBuildStrategy
+  output:
+    image: image-registry.openshift-image-registry.svc:5000/ubi-buildpacks/quarkus-hello:latest
+  volumes:
+    - name: creds-ws

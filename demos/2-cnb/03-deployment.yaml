@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    alpha.image.policy.openshift.io/resolve-names: '*'
+    app.openshift.io/route-disabled: "false"
+    app.openshift.io/vcs-ref: ""
+    app.openshift.io/vcs-uri: https://github.com/quarkusio/quarkus-quickstarts
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"quarkus-hello:latest","namespace":"ubi-buildpacks"},"fieldPath":"spec.template.spec.containers[?(@.name==\"quarkus-hello\")].image","paused":"false"}]'
+  labels:
+    app: quarkus-hello
+    app.kubernetes.io/component: quarkus-hello
+    app.kubernetes.io/instance: quarkus-hello
+    app.kubernetes.io/name: quarkus-hello
+    app.kubernetes.io/part-of: quarkus-hello-app
+    app.openshift.io/runtime: java
+    app.openshift.io/runtime-version: openjdk-17-ubi8
+  name: quarkus-hello
+  namespace: ubi-buildpacks
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: quarkus-hello
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: quarkus-hello
+        deployment: quarkus-hello
+    spec:
+      containers:
+      - image: image-registry.openshift-image-registry.svc:5000/ubi-buildpacks/quarkus-hello:latest
+        imagePullPolicy: Always
+        name: quarkus-hello
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        - containerPort: 8443
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
