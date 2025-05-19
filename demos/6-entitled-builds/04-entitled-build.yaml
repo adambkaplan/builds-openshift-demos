@@ -1,7 +1,7 @@
 apiVersion: shipwright.io/v1beta1
 kind: Build
 metadata:
-  name: buildah-rhel
+  name: buildah-bootc
 spec:
   source:
     type: Git
@@ -22,4 +22,4 @@ spec:
         sharedSecret: etc-pki-entitlement
     name: etc-pki-entitlement
   output:
-    image: image-registry.openshift-image-registry.svc:5000/buildah-entitlement/buildah-rhel:latest
+    image: image-registry.openshift-image-registry.svc:5000/buildah-entitlement/buildah-bootc:latest

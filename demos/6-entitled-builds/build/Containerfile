@@ -1,7 +1,16 @@
-FROM registry.access.redhat.com/ubi9/ubi:latest
-
-RUN dnf --enablerepo=codeready-builder-for-rhel-9-x86_64-rpms install \
-    cloud-init \ 
-    nss_wrapper \
-    uid_wrapper -y && \
-    dnf clean all -y
+FROM image-registry.openshift-image-registry.svc:5000/buildah-entitlement/rhel-bootc:latest
+# Make sure the repositories with kernel-rt are enabled.
+RUN <<EOF
+set -xeuo pipefail
+# kernel-rt is only available for x86_64
+arch=$(uname -m)
+if [[ "$arch" != "x86_64" ]]; then
+  exit 0
+fi
+dnf config-manager --set-enabled rhel-10-for-x86_64-nfv-rpms
+dnf config-manager --set-enabled rhel-10-for-x86_64-rt-rpms
+dnf remove -y kernel kernel-{core,modules,modules-core,modules-extra}
+dnf install -y httpd kernel-rt
+dnf clean all
+bootc container lint
+EOF
