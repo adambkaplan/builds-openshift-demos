@@ -48,5 +48,3 @@ spec:
     kind: ClusterBuildStrategy
   output:
     image: image-registry.openshift-image-registry.svc:5000/ubi-buildpacks/quarkus-hello:latest
-  volumes:
-    - name: creds-ws
